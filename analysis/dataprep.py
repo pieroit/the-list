@@ -1,5 +1,5 @@
 #!/usr/bin/python
-
+import copy
 import pandas as pd
 
 def extract_year(date):
@@ -39,26 +39,58 @@ def extract_month(date):
 
     return month
 
+def explode_casualties(casualty):
+
+    # new_casualty['name'] = extract_name(casualty['name, gender, age'])
+    # new_casualty['sex']  = extract_gender_age(casualty['name, gender, age'])
+
+    # TODO: duplication HERE
+
+    return [casualty]
+
+def extract_name(name_gender_age):
+    name = name_gender_age.split('(')
+    return name[0].strip()
+
+def extract_gender_age(name_gender_age):
+    print('\n')
+    print(name_gender_age)
+    gender_age = name_gender_age.split('(')
+    print gender_age
+    if len(gender_age) < 2:
+        return 'unknown'
+    else:
+        gender_age = gender_age[1].replace(')', '')
+        print gender_age
+
+    return name_gender_age
+
 
 if __name__ == '__main__':
     # load datasets
     refugees = pd.read_csv('../data/refugeesAndMigrants.csv')
     #sources_df  = pd.read_csv('../data/sources.csv')
 
-    # loop over records
-    for row in refugees.to_dict(orient='records'):
-        print row
+    # loop over records and create a new data structure with formatted data and a record for each casualty.
+    # not using standard pandas methods (map, apply, etc.) because some records need to be duplicated
+    formatted_extended_data = []
+    for casualty in refugees.to_dict(orient='records'):
+        #print row
 
         # add separate columns for month and year
-        row['found_dead_year']  = extract_year( row['found dead'] )
-        row['found_dead_month'] = extract_month( row['found dead'] )
+        casualty['found_dead_year']  = extract_year(casualty['found dead'])
+        casualty['found_dead_month'] = extract_month(casualty['found dead'])
 
-        # duplicate records so every row is a single death
-        # TODO: here
+        # duplicate records so every row is a single death with its own attributes
+        casualty_array = explode_casualties(casualty)
 
-        # add separate columns for
-        #row['name'] = extract_name['name, gender, age']
-        #row['name'] = extract_gender['name, gender, age']
-        #row['name'] = extract_age['name, gender, age']
+        for i, cas in enumerate(casualty_array):
 
-    print(refugees.head())
+            # this record will finally count as one death
+            cas['number'] = 1
+
+            # add clean record to output dataset
+            formatted_extended_data.append( cas )
+
+
+
